@@ -139,3 +139,4 @@
 /home/khanh/RiderProjects/webAPI/webAPI/bin/Debug/net5.0/Microsoft.Extensions.Options.dll
 /home/khanh/RiderProjects/webAPI/webAPI/bin/Debug/net5.0/Microsoft.Extensions.Primitives.dll
 /home/khanh/RiderProjects/webAPI/webAPI/bin/Debug/net5.0/System.Runtime.CompilerServices.Unsafe.dll
+/home/khanh/RiderProjects/webAPI/webAPI/bin/Debug/net5.0/BCrypt.Net-Next.dll

@@ -1,28 +1,19 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.OpenApi.Models;
-using webAPI.DBContext;
-using webAPI.Services;
-using webAPI.Services.IServices;
+using webAPI.Extentions;
+
 
 namespace webAPI
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IWebHostEnvironment env)
         {
-            Configuration = configuration;
+            Configuration = InitConfiguration(env);
         }
 
         public IConfiguration Configuration { get; }
@@ -30,21 +21,13 @@ namespace webAPI
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(
-                    Configuration.GetConnectionString("DefaultConnection")));
-            
             services.AddControllers();
-            services.AddSwaggerGen(c => { c.SwaggerDoc("v1", new OpenApiInfo { Title = "webAPI", Version = "v1" }); });
-            
-            services.AddScoped<IBookService, BookService>();
-            
-            //auto mapper config
-            var mapper = MappingConfig.RegisterMaps().CreateMapper();
-            services.AddSingleton(mapper);
-            services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+            services
+                .AddDatabase()
+                .AddService()
+                .AddAutoMapper()
+                .AddSwagger();
         }
-        
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
@@ -53,7 +36,7 @@ namespace webAPI
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "webAPI v1"));
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApi v1"));
             }
 
             app.UseHttpsRedirection();
@@ -63,6 +46,21 @@ namespace webAPI
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints => { endpoints.MapControllers(); });
+        }
+
+        // map dữ liêu trong cái section appseting in file appsetting.json vào cho class appsettings
+        private IConfiguration InitConfiguration(IWebHostEnvironment env)
+        {
+            //Config the app read values from appsettings base on current environment values.
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+                .AddJsonFile("appsettings.json", false, true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", true, true)
+                .AddEnvironmentVariables().Build();
+            //
+            // Map AppSettings section in appsettings.json file value to AppSetting model
+            configuration.GetSection("AppSettings").Get<AppSettings>(options => options.BindNonPublicProperties = true);
+            return configuration;
         }
     }
 }
